@@ -1,11 +1,15 @@
 library(xlsx)
-dat <- read.xlsx("courseTable.xlsx", sheetName="Sheet1")
+library(plyr)
+dat <- read.xlsx("courseTable.xlsx", sheetName="Sheet1", header=FALSE)
+colnames(dat)[c(3,10,11,12,15)] <- c("Subject","Rated", "RatedClass", "RatedProf", "Work")
 
-a <- aggregate(dat[, 10:12], list(dat$ACCT), mean, na.rm = TRUE)
-a$total1 <- aggregate(dat[, 10], list(dat$ACCT), length, na.rm = TRUE)
+a <- aggregate(dat[, c(10,11,12,15)], list(dat$Subject), mean, na.rm = TRUE)
+colnames(a)[1] <- "Subject"
 
-b <- table(dat$ACCT)
-b["AMTH"]
-a$total <- b
-a$average_score <- (a$X3.3+a$X3.3.1+a$X3.3.2)/3
-a$goodness <- sqrt(a$total)*a$average_score
+coursesBySubject <- table(dat$Subject)
+a$Courses <- coursesBySubject
+a$AverageScore <- (a$Rated+a$RatedClass+a$RatedProf)/3
+
+a$Goodness <- ((a$Courses)^(1/3))*a$AverageScore/a$Work
+result <- arrange(a,desc(Goodness))
+print(result[1:10,])
